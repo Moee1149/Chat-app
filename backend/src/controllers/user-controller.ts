@@ -35,3 +35,37 @@ export const checkUserExist: RequestHandler = async (
     res.status(500).json({ error: "Unknown error" });
   }
 };
+
+export const handleFindUsers: RequestHandler = async (
+  req: Request,
+  res: Response,
+) => {
+  const { phone } = req.body;
+  if (!phone) {
+    res.status(400).json({ error: "phone number is required" });
+  }
+  try {
+    const allUsers = await prisma.user.findMany({
+      where: {
+        mobile_number: phone,
+      },
+    });
+    if (allUsers.length < 1) {
+      res.status(200).json({ message: "No user Found", allUsers });
+    }
+    console.log(allUsers);
+    res.status(200).json({ allUsers });
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      res.status(500).json({ error: "Internal Server Error" });
+      console.log("Prisma Error: ", error.message);
+      return;
+    }
+    if (error instanceof Error) {
+      res.status(500).json({ error: "Internal Server Error" });
+      console.log("Unexpected Error : ", error.message);
+      return;
+    }
+    res.status(500).json({ error: "Unknown Error occurred" });
+  }
+};

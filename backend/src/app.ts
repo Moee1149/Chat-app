@@ -12,4 +12,4 @@ app.use(cors());
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
-app.use("/api", userRouter);
+app.use("/api/user", userRouter);

@@ -6,6 +6,7 @@ import SignupPage from "./routes/auth/signup/SignupPage";
 import { InputOTPControlled } from "./routes/auth/verification/InputOTPControlled";
 import CreateNewAccount from "./routes/auth/signup/CreateNewAccount";
 import NotFoundPage from "./components/not-foundpage";
+import ChatLayout from "./routes/chats/ChatLayout";
 
 export default function App() {
   return (
@@ -17,7 +18,7 @@ export default function App() {
         <Route path="signup/verification" element={<InputOTPControlled />} />
         <Route path="signup/create-new-user" element={<CreateNewAccount />} />
       </Route>
-      <Route path="/chats" element={<div>This is chat</div>} />
+      <Route path="/chats" element={<ChatLayout />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
