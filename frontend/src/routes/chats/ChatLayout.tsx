@@ -217,7 +217,7 @@ export default function ChatApp() {
                           src={chat.avatar || "/placeholder.svg"}
                           alt={chat.name}
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className="dark:bg-[#EAEAEA]">
                           {chat.name
                             .split(" ")
                             .map((n) => n[0])
@@ -269,7 +269,7 @@ export default function ChatApp() {
                         src={selectedChatData?.avatar || "/placeholder.svg"}
                         alt={selectedChatData?.name}
                       />
-                      <AvatarFallback>
+                      <AvatarFallback className="dark:bg-[#EAEAEA]">
                         {selectedChatData?.name
                           .split(" ")
                           .map((n) => n[0])
