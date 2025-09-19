@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --watch-path=./ --env-file=.env --import tsx ./src/server.ts"
+    "start": "node --watch-path=./ --env-file=.env --import tsx ./src/server.ts",
+    "dev": "npx tsx ./src/server.ts"
   },
   "keywords": [],
   "author": "",

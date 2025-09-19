@@ -9,11 +9,14 @@ import {
   Phone,
   Video,
   Info,
+  Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import AddNewUserDialog from "./components/AddNewUser";
 
 // Dummy data
 const chats = [
@@ -160,6 +163,8 @@ export default function ChatApp() {
     }
   };
 
+  const handleForm = () => {};
+
   return (
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>
       <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -171,18 +176,35 @@ export default function ChatApp() {
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                 ChatWave
               </h1>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="text-gray-600 dark:text-gray-300"
-              >
-                {isDarkMode ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
+              <div className="space-x-3">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-600 dark:text-gray-300 cursor-pointer"
+                    >
+                      <Plus
+                        className="fill-gray-100 cursor-pointer hover:stroke-gray-600"
+                        size={20}
+                      />
+                    </Button>
+                  </DialogTrigger>
+                  <AddNewUserDialog handleForm={handleForm} />
+                </Dialog>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className="text-gray-600 dark:text-gray-300 cursor-pointer"
+                >
+                  {isDarkMode ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Search Bar */}
