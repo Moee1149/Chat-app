@@ -18,7 +18,7 @@ export default function AddNewUserDialog({
   return (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
-        <DialogTitle>Edit profile</DialogTitle>
+        <DialogTitle>Add new User</DialogTitle>
         <DialogDescription>
           Make changes to your profile here. Click save when you&apos;re done.
         </DialogDescription>

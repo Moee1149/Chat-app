@@ -25,7 +25,7 @@ export default function SignupPage() {
     }
 
     try {
-      const { data } = await axios.post(`${backendUrl}/user_exist`, {
+      const { data } = await axios.post(`${backendUrl}/user/user_exist`, {
         email,
       });
       if (data.error) {

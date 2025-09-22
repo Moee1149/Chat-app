@@ -9,32 +9,28 @@ datasource db {
 }
 
 model User {
-  id                String    @unique @default(cuid())
-  email             String    @unique
+  id                String   @id @default(cuid())
+  email             String   @unique
   password          String
-  mobile_number     String    @unique
-  bio               String    @default("")
+  mobile_number     String   @unique
+  bio               String   @default("")
   firstname         String
   lastname          String
-  isOnline          Boolean   @default(false)
-  profilePictureUrl String?   @default("")
-  chatId1           Chat[]    @relation("UserChats1")
-  chatId2           Chat[]    @relation("UserChats2")
-  message           Message[]
-  createdAt         DateTime  @default(now())
+  isOnline          Boolean  @default(false)
+  profilePictureUrl String?  @default("")
+  createdAt         DateTime @default(now())
+  chats             Chat[]
 }
 
 model Chat {
-  id      String    @unique @default(cuid())
-  userId1 String
-  userId2 String
-  message Message[]
-  user1   User      @relation("UserChats1", fields: [userId1], references: [id], onDelete: Cascade)
-  user2   User      @relation("UserChats2", fields: [userId2], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  users     User[]
+  messages  Message[]
+  createdAt DateTime  @default(now())
 }
 
 model Message {
-  id        String   @unique @default(cuid())
+  id        String   @id @default(cuid())
   text      String
   senderId  String
   fileUrl   String?  @default("")
@@ -43,7 +39,6 @@ model Message {
   delivered Boolean  @default(false)
   createdAt DateTime @default(now())
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  sender    User     @relation(fields: [senderId], references: [id])
 }
 
 model UserVerification {
