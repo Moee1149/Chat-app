@@ -163,7 +163,9 @@ export default function ChatApp() {
     }
   };
 
-  const handleForm = () => {};
+  const handleForm = () => {
+    console.log("clicked");
+  };
 
   return (
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>

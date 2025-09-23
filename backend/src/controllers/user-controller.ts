@@ -34,9 +34,10 @@ export class UserController {
       const user = await this.userModel.findUserByPhone(phone);
       if (user.length < 1) {
         res.status(200).json({ message: "No user Found" });
+        return;
       }
       console.log(user);
-      res.status(200).json({ user });
+      res.status(200).json(user);
     } catch (error) {
       console.log(error);
       next(error);
