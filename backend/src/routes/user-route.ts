@@ -1,12 +1,12 @@
 import express from "express";
-import {
-  checkUserExist,
-  handleFindUsers,
-} from "../controllers/user-controller";
+
+import { UserController } from "../controllers/user-controller";
 
 const router = express.Router();
 
-router.post("/user_exist", checkUserExist);
-router.post("/find_user", handleFindUsers);
+const userController = new UserController();
+
+router.post("/user_exist", userController.checkUserExists.bind(userController));
+router.post("/find_user", userController.handleFindUser.bind(userController));
 
 export default router;

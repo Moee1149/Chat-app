@@ -1,71 +1,45 @@
-import type { RequestHandler, Request, Response } from "express";
-import { PrismaClientKnownRequestError } from "../generated/prisma/runtime/library";
+import type { Request, Response, NextFunction } from "express";
 
-import { prisma } from "../config/db";
+import { UserModel } from "../models/UserModel";
+import { BadRequest, ConflictError } from "../error";
 
-export const checkUserExist: RequestHandler = async (
-  req: Request,
-  res: Response,
-) => {
-  const { email } = req.body;
-  if (!email) {
-    res.status(400).json({ error: "Email is required" });
+export class UserController {
+  userModel;
+  constructor() {
+    this.userModel = new UserModel();
   }
 
-  try {
-    const userAlreadyExists = await prisma.user.findFirst({
-      where: { email },
-    });
+  async checkUserExists(req: Request, res: Response, next: NextFunction) {
+    const { email } = req.body;
+    try {
+      if (!email) {
+        throw new BadRequest("Email is required");
+      }
+      const user = await this.userModel.checkUserExist(email);
+      if (user) {
+        throw new ConflictError("User already exits with this email");
+      }
+      res.status(200).json({ message: "User is available" });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-    if (userAlreadyExists) {
-      res.status(200).json({ error: "User already exists with this email" });
-      return;
+  async handleFindUser(req: Request, res: Response, next: NextFunction) {
+    const { phone } = req.body;
+    try {
+      if (!phone) {
+        throw new BadRequest("phone number is required");
+      }
+      const user = await this.userModel.findUserByPhone(phone);
+      if (user.length < 1) {
+        res.status(200).json({ message: "No user Found" });
+      }
+      console.log(user);
+      res.status(200).json({ user });
+    } catch (error) {
+      console.log(error);
+      next(error);
     }
-    res.status(200).json({ message: "User is available" });
-  } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError) {
-      console.log("Primsa Error: ", error.code);
-      res.status(500).json({ error: "Unexpected error occurred" });
-    }
-    if (error instanceof Error) {
-      console.error("Unexpected error:", error.message);
-      res.status(500).json({ error: "Unexpected error occurred" });
-      return;
-    }
-    res.status(500).json({ error: "Unknown error" });
   }
-};
-
-export const handleFindUsers: RequestHandler = async (
-  req: Request,
-  res: Response,
-) => {
-  const { phone } = req.body;
-  if (!phone) {
-    res.status(400).json({ error: "phone number is required" });
-  }
-  try {
-    const allUsers = await prisma.user.findMany({
-      where: {
-        mobile_number: phone,
-      },
-    });
-    if (allUsers.length < 1) {
-      res.status(200).json({ message: "No user Found", allUsers });
-    }
-    console.log(allUsers);
-    res.status(200).json({ allUsers });
-  } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError) {
-      res.status(500).json({ error: "Internal Server Error" });
-      console.log("Prisma Error: ", error.message);
-      return;
-    }
-    if (error instanceof Error) {
-      res.status(500).json({ error: "Internal Server Error" });
-      console.log("Unexpected Error : ", error.message);
-      return;
-    }
-    res.status(500).json({ error: "Unknown Error occurred" });
-  }
-};
+}
