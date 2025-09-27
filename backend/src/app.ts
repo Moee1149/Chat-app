@@ -4,6 +4,8 @@ import cors from "cors";
 
 import authRouter from "./routes/auth-route";
 import userRouter from "./routes/user-route";
+import chatRouter from "./routes/chat-route";
+
 import {
   BadRequest,
   ConflictError,
@@ -23,6 +25,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/chat", chatRouter);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof BadRequest) {

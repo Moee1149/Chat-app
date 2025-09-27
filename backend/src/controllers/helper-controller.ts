@@ -2,15 +2,11 @@ import type { Request, Response, NextFunction } from "express";
 
 import { UserModel } from "../models/UserModel";
 import { BadRequest, ConflictError } from "../error";
-import { ChatModel } from "../models/ChatModel";
 
-export class UserController {
+export class HelperController {
   userModel;
-  chatModel;
   constructor() {
     this.userModel = new UserModel();
-    this.chatModel = new ChatModel();
-    UserController;
   }
 
   async checkUserExists(req: Request, res: Response, next: NextFunction) {
@@ -37,7 +33,7 @@ export class UserController {
       }
       const user = await this.userModel.findUserByPhone(phone);
       if (user.length < 1) {
-        res.status(200).json({ message: "No user Found" });
+        res.status(200).json({ message: "No user Found", user });
         return;
       }
       console.log(user);

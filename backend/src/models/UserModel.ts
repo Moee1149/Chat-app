@@ -1,4 +1,5 @@
 import { prisma } from "../config/db";
+
 import { PrismaClientKnownRequestError } from "../generated/prisma/runtime/library";
 import { DatabaseError } from "../error";
 

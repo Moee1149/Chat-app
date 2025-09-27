@@ -9,17 +9,32 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
+  id                String        @id @default(cuid())
+  email             String        @unique
   password          String
-  mobile_number     String   @unique
-  bio               String   @default("")
+  mobile_number     String        @unique
+  bio               String        @default("")
   firstname         String
   lastname          String
-  isOnline          Boolean  @default(false)
-  profilePictureUrl String?  @default("")
-  createdAt         DateTime @default(now())
+  isOnline          Boolean       @default(false)
+  profilePictureUrl String?       @default("")
+  createdAt         DateTime      @default(now())
   chats             Chat[]
+  contacts          UserContact[] @relation("UserContactsOwner")
+  asContacts        UserContact[] @relation("UserContactsContact")
+}
+
+model UserContact {
+  id        String   @id @default(cuid())
+  ownerId   String
+  contactId String
+  FirstName String
+  LastName  String
+  createdAt DateTime @default(now())
+  owner     User     @relation("UserContactsOwner", fields: [ownerId], references: [id])
+  contact   User     @relation("UserContactsContact", fields: [contactId], references: [id])
+
+  @@unique([ownerId, contactId])
 }
 
 model Chat {
