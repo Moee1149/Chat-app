@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+
 import { Button } from "@/components/ui/button";
 import {
   DialogClose,
@@ -9,24 +13,97 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+
+type AddNewUserDialogProps = {
+  handleForm: (formData: FormData) => void;
+};
+
+function fetchUserByPhoneNumber(phone: string) {
+  return axios.post("http://localhost:5000/api/user/find_user", { phone });
+}
 
 export default function AddNewUserDialog({
   handleForm,
-}: {
-  handleForm: (formData: FormData) => void;
-}) {
+}: AddNewUserDialogProps) {
   const [phone, setPhone] = useState("");
+  const [validationState, setValidationState] = useState<{
+    isValid: boolean;
+    message: string;
+    showMessage: boolean;
+  }>({
+    isValid: false,
+    message: "",
+    showMessage: false,
+  });
+
+  const mutation = useMutation({
+    mutationFn: fetchUserByPhoneNumber,
+    onSuccess: (data) => {
+      console.log(data);
+      const userExists = data.data && data.data.length > 0;
+      setValidationState({
+        isValid: true,
+        message: userExists ? "User Exists" : "User not found",
+        showMessage: true,
+      });
+    },
+    onError: (error) => {
+      console.error(error);
+      setValidationState({
+        isValid: false,
+        message: "Error checking user",
+        showMessage: true,
+      });
+    },
+  });
 
   const handlePhoneInputFieldChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const newValue = e.target.value;
+
+    // Only allow numeric input
+    if (!/^\d*$/.test(newValue)) {
+      return;
+    }
+
     setPhone(newValue);
-    if (newValue.length > 10) {
-      console.log("invalid number");
+
+    if (newValue.length === 0) {
+      setValidationState({
+        isValid: false,
+        message: "",
+        showMessage: false,
+      });
+      mutation.reset();
+    } else if (newValue.length > 0 && newValue.length < 8) {
+      setValidationState({
+        isValid: false,
+        message: "",
+        showMessage: false,
+      });
+      mutation.reset();
+    } else if (newValue.length >= 8 && newValue.length <= 9) {
+      setValidationState({
+        isValid: false,
+        message: "Phone number too short",
+        showMessage: true,
+      });
+      mutation.reset();
     } else if (newValue.length === 10) {
-      console.log("hit 10");
+      setValidationState({
+        isValid: false,
+        message: "Checking user...",
+        showMessage: true,
+      });
+      mutation.mutate(newValue);
+    } else if (newValue.length > 10) {
+      setValidationState({
+        isValid: false,
+        message: "Invalid mobile number",
+        showMessage: true,
+      });
+      mutation.reset();
     }
   };
 
@@ -59,13 +136,18 @@ export default function AddNewUserDialog({
               onChange={handlePhoneInputFieldChange}
             />
           </div>
-          {false ? (
-            <span className="text-sm font-semibold text-emerald-500 mt-[-10px] ml-2">
-              User Exits
-            </span>
-          ) : (
-            <span className="text-sm font-semibold text-red-500 mt-[-10px] ml-2">
-              Invalid mobile number
+          {validationState.showMessage && (
+            <span
+              className={`text-sm font-semibold mt-[-10px] ml-2 ${
+                validationState.isValid &&
+                validationState.message === "User Exists"
+                  ? "text-emerald-500"
+                  : "text-red-500"
+              }`}
+            >
+              {mutation.isPending && phone.length === 10
+                ? "Checking user..."
+                : validationState.message}
             </span>
           )}
         </div>

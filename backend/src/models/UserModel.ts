@@ -20,7 +20,8 @@ export class UserModel {
   //check find user by number
   async findUserByPhone(phone: string) {
     try {
-      return await prisma.user.findMany({ where: { mobile_number: phone } });
+      const user = prisma.user.findMany({ where: { mobile_number: phone } });
+      return user;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         console.log("Primsa Error: ", error.code);

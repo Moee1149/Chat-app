@@ -25,7 +25,7 @@ export class HelperController {
     }
   }
 
-  async handleFindUser(req: Request, res: Response, next: NextFunction) {
+  async handleFindUserByPhone(req: Request, res: Response, next: NextFunction) {
     const { phone } = req.body;
     try {
       if (!phone) {
