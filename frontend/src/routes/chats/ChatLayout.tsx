@@ -163,10 +163,6 @@ export default function ChatApp() {
     }
   };
 
-  const handleForm = () => {
-    console.log("clicked");
-  };
-
   return (
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>
       <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -192,7 +188,7 @@ export default function ChatApp() {
                       />
                     </Button>
                   </DialogTrigger>
-                  <AddNewUserDialog handleForm={handleForm} />
+                  <AddNewUserDialog />
                 </Dialog>
                 <Button
                   variant="ghost"

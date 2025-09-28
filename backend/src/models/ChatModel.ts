@@ -12,7 +12,6 @@ export class ChatModel {
           },
         },
       });
-      console.log(newChat);
       return newChat;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {

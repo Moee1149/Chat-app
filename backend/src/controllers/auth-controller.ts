@@ -130,7 +130,7 @@ export const handleUserLogin: RequestHandler = async (
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
-      sameSite: "strict",
+      sameSite: "lax",
     });
     console.log(token, "token send");
     res.json({ message: "Login Sucessfull" });

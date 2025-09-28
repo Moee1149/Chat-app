@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 import { Button } from "@/components/ui/button";
@@ -14,18 +14,61 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type AddNewUserDialogProps = {
-  handleForm: (formData: FormData) => void;
+type User = {
+  id: string;
+  email: string;
+  firstname: string;
+  lastname: string;
+  mobile_number: string;
 };
 
-function fetchUserByPhoneNumber(phone: string) {
-  return axios.post("http://localhost:5000/api/user/find_user", { phone });
+type CurrentUserResponse = {
+  user: User;
+};
+
+type FindUserResponse = User[];
+
+type handleAddNewChatType = {
+  firstName: string;
+  lastName: string;
+  receiverId: string;
+  senderId: string;
+};
+
+async function fetchUserByPhoneNumber(phone: string) {
+  return axios.post<FindUserResponse>(
+    "http://localhost:5000/api/user/find_user",
+    { phone },
+  );
 }
 
-export default function AddNewUserDialog({
-  handleForm,
-}: AddNewUserDialogProps) {
+async function handleAddNewChat({
+  receiverId,
+  senderId,
+  firstName,
+  lastName,
+}: handleAddNewChatType) {
+  return axios.post("http://localhost:5000/api/chat/add_chat", {
+    firstName,
+    lastName,
+    senderId,
+    receiverId,
+  });
+}
+
+async function getCurrentUser() {
+  return await axios.get<CurrentUserResponse>(
+    "http://localhost:5000/api/user/currentUser",
+    {
+      withCredentials: true,
+    },
+  );
+}
+
+export default function AddNewUserDialog() {
   const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [validationState, setValidationState] = useState<{
     isValid: boolean;
     message: string;
@@ -34,6 +77,11 @@ export default function AddNewUserDialog({
     isValid: false,
     message: "",
     showMessage: false,
+  });
+
+  const { data } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: getCurrentUser,
   });
 
   const mutation = useMutation({
@@ -54,6 +102,21 @@ export default function AddNewUserDialog({
         message: "Error checking user",
         showMessage: true,
       });
+    },
+  });
+
+  const addNewChatMutation = useMutation({
+    mutationFn: handleAddNewChat,
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (error) => {
+      console.error(error);
+      // setValidationState({
+      //   isValid: false,
+      //   message: "Error adding chat",
+      //   showMessage: true,
+      // });
     },
   });
 
@@ -107,6 +170,27 @@ export default function AddNewUserDialog({
     }
   };
 
+  const handleForm = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (firstName && lastName && phone) {
+      const receiverId =
+        mutation.data &&
+        mutation.data.data?.length > 0 &&
+        mutation.data.data[0]?.id;
+      const senderId = data?.data?.user?.id;
+      console.log(senderId);
+      console.log(receiverId);
+      if (receiverId && senderId) {
+        addNewChatMutation.mutate({
+          firstName,
+          lastName,
+          receiverId,
+          senderId,
+        });
+      }
+    }
+  };
+
   return (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader className="mb-3">
@@ -115,16 +199,26 @@ export default function AddNewUserDialog({
           Enter user details before sending message
         </DialogDescription>
       </DialogHeader>
-      <form action={handleForm}>
+      <form onSubmit={handleForm}>
         <div className="grid gap-4 mb-4">
           <div className="flex gap-3">
             <div className="grid gap-3">
               <Label htmlFor="name-1">First Name</Label>
-              <Input id="name-1" name="name" />
+              <Input
+                id="name-1"
+                name="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
             </div>
             <div className="grid gap-3">
               <Label htmlFor="username-1">Last Name</Label>
-              <Input id="username-1" name="username" />
+              <Input
+                id="username-1"
+                name="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
             </div>
           </div>
           <div className="grid gap-3">

@@ -13,15 +13,15 @@ export class ChatController {
   }
 
   async handleAddNewChat(req: Request, res: Response, next: NextFunction) {
-    const { senderId, recieverId, firstName, lastName } = req.body;
+    const { senderId, receiverId, firstName, lastName } = req.body;
     try {
-      if (!senderId || !recieverId || !firstName || !lastName) {
+      if (!senderId || !receiverId || !firstName || !lastName) {
         throw new BadRequest("All fields are required");
       }
-      const user = await this.chatModel.addNewChat(senderId, recieverId);
+      const user = await this.chatModel.addNewChat(senderId, receiverId);
       const userContact = await this.userContactModel.addNewContact(
         senderId,
-        recieverId,
+        receiverId,
         firstName,
         lastName,
       );

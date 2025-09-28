@@ -40,6 +40,7 @@ export default function LoginPage() {
       const response = await axios.post(
         `${backend_url}/auth/login`,
         result.data,
+        { withCredentials: true },
       );
       toast.success(response.data?.message, {
         position: "top-center",
