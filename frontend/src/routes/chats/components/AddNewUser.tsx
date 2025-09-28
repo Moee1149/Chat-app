@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router";
+
+const backend_url = import.meta.env.VITE_BACKEND_URL;
 
 type User = {
   id: string;
@@ -36,10 +40,9 @@ type handleAddNewChatType = {
 };
 
 async function fetchUserByPhoneNumber(phone: string) {
-  return axios.post<FindUserResponse>(
-    "http://localhost:5000/api/user/find_user",
-    { phone },
-  );
+  return axios.post<FindUserResponse>(`${backend_url}/user/find_user`, {
+    phone,
+  });
 }
 
 async function handleAddNewChat({
@@ -48,7 +51,7 @@ async function handleAddNewChat({
   firstName,
   lastName,
 }: handleAddNewChatType) {
-  return axios.post("http://localhost:5000/api/chat/add_chat", {
+  return axios.post(`${backend_url}/chat/add_chat`, {
     firstName,
     lastName,
     senderId,
@@ -58,14 +61,19 @@ async function handleAddNewChat({
 
 async function getCurrentUser() {
   return await axios.get<CurrentUserResponse>(
-    "http://localhost:5000/api/user/currentUser",
+    `${backend_url}/user/currentUser`,
     {
       withCredentials: true,
     },
   );
 }
 
-export default function AddNewUserDialog() {
+export default function AddNewUserDialog({
+  onClose,
+}: {
+  onClose?: () => void;
+}) {
+  const router = useNavigate();
   const [phone, setPhone] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -109,6 +117,17 @@ export default function AddNewUserDialog() {
     mutationFn: handleAddNewChat,
     onSuccess: (data) => {
       console.log(data);
+      const isNewChat = data?.data?.message?.includes("New chat created");
+
+      if (isNewChat) {
+        toast.success("New chat created successfully!");
+      } else {
+        toast.info("Loading existing chat...");
+      }
+
+      // Close dialog and navigate
+      onClose?.();
+      router(`/chats/?chatId=${data?.data?.chat.id}`);
     },
     onError: (error) => {
       console.error(error);
@@ -172,23 +191,36 @@ export default function AddNewUserDialog() {
 
   const handleForm = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (firstName && lastName && phone) {
-      const receiverId =
-        mutation.data &&
-        mutation.data.data?.length > 0 &&
-        mutation.data.data[0]?.id;
-      const senderId = data?.data?.user?.id;
-      console.log(senderId);
-      console.log(receiverId);
-      if (receiverId && senderId) {
-        addNewChatMutation.mutate({
-          firstName,
-          lastName,
-          receiverId,
-          senderId,
-        });
-      }
+
+    if (!firstName || !lastName || !phone) {
+      toast.error("Please fill in all fields");
+      return;
     }
+
+    const receiverId =
+      mutation.data &&
+      mutation.data.data?.length > 0 &&
+      mutation.data.data[0]?.id;
+    const senderId = data?.data?.user?.id;
+
+    if (!receiverId) {
+      toast.error("User not found. Please check the phone number.");
+      return;
+    }
+
+    if (!senderId) {
+      toast.error(
+        "Unable to identify current user. Please refresh and try again.",
+      );
+      return;
+    }
+
+    addNewChatMutation.mutate({
+      firstName,
+      lastName,
+      receiverId,
+      senderId,
+    });
   };
 
   return (
@@ -209,6 +241,7 @@ export default function AddNewUserDialog() {
                 name="firstName"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                disabled={addNewChatMutation.isPending}
               />
             </div>
             <div className="grid gap-3">
@@ -218,6 +251,7 @@ export default function AddNewUserDialog() {
                 name="lastName"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                disabled={addNewChatMutation.isPending}
               />
             </div>
           </div>
@@ -228,6 +262,7 @@ export default function AddNewUserDialog() {
               name="phone"
               value={phone}
               onChange={handlePhoneInputFieldChange}
+              disabled={addNewChatMutation.isPending}
             />
           </div>
           {validationState.showMessage && (
@@ -244,12 +279,32 @@ export default function AddNewUserDialog() {
                 : validationState.message}
             </span>
           )}
+          {addNewChatMutation.isPending && (
+            <span className="text-sm font-semibold text-blue-500 ml-2">
+              Creating chat...
+            </span>
+          )}
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button
+              variant="outline"
+              disabled={addNewChatMutation.isPending}
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
           </DialogClose>
-          <Button type="submit">Chat Now</Button>
+          <Button
+            type="submit"
+            disabled={
+              addNewChatMutation.isPending ||
+              !validationState.isValid ||
+              validationState.message !== "User Exists"
+            }
+          >
+            {addNewChatMutation.isPending ? "Creating..." : "Chat Now"}
+          </Button>
         </DialogFooter>
       </form>
     </DialogContent>

@@ -1,41 +1,90 @@
 import ChatSearchBar from "./ChatSearchBar";
 import UserChatLists from "./UserChatLists";
+import { useState } from "react";
 
-import { EllipsisVertical, Plus } from "lucide-react";
+import { Sun, Moon, Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import AddNewUserDialog from "./AddNewUser";
 
-export default function ChatSideBar() {
-  const handleForm = (formData: FormData) => {
-    console.log("clicked");
-    console.log(formData.get("username"));
+interface ChatSideBarProps {
+  selectedChat: number | null;
+  setSelectedChat: (chatId: number | null) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (isDark: boolean) => void;
+}
+
+export default function ChatSideBar({
+  selectedChat,
+  setSelectedChat,
+  isDarkMode,
+  setIsDarkMode,
+}: ChatSideBarProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleChatSelect = (chatId: number) => {
+    setSelectedChat(chatId);
   };
 
   return (
-    <aside className="h-screen bg-gray-100 py-2 pl-3 flex flex-col">
-      <div>
-        <div className="px-3 py-2 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">ChatWave</h2>
-          <div className="flex gap-3 items-center">
-            <Dialog>
+    <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            ChatWave
+          </h1>
+          <div className="space-x-3">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="cursor-pointer">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-600 dark:text-gray-300 cursor-pointer"
+                >
                   <Plus
                     className="fill-gray-100 cursor-pointer hover:stroke-gray-600"
                     size={20}
                   />
                 </Button>
               </DialogTrigger>
-              <AddNewUserDialog handleForm={handleForm} />
+              <AddNewUserDialog onClose={closeDialog} />
             </Dialog>
-            <EllipsisVertical size={20} className="cursor-pointer " />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="text-gray-600 dark:text-gray-300 cursor-pointer"
+            >
+              {isDarkMode ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
           </div>
         </div>
-        {/* search bar */}
-        <ChatSearchBar />
+
+        {/* Search Bar */}
+        <ChatSearchBar onSearchChange={handleSearchChange} />
       </div>
-      <UserChatLists />
-    </aside>
+
+      {/* Chat List */}
+      <UserChatLists
+        selectedChat={selectedChat}
+        onChatSelect={handleChatSelect}
+        searchQuery={searchQuery}
+      />
+    </div>
   );
 }

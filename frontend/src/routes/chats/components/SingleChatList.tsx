@@ -1,57 +1,60 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export type Chat = {
-  id: string;
-  user: {
-    name: string;
-    avatar?: string;
-  };
-  latestMessage: {
-    text: string;
-    timestamp: string;
-  };
-  unreadCount?: number;
+type Chat = {
+  id: number;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  online: boolean;
 };
 
-interface Props {
-  chats: Chat[];
+interface SingleChatListProps {
+  chat: Chat;
 }
 
-export default function SingleChatList({ chats }: Props) {
-  if (chats.length < 1) {
-    return <div>No Chat Found</div>;
-  }
-
+export default function SingleChatList({ chat }: SingleChatListProps) {
   return (
-    <>
-      {chats.map((chat) => {
-        return (
-          <div
-            className="flex items-center gap-4 p-3 mt-3 hover:bg-gray-300/70 hover:shadow-sm  hover:rounded-md transition-all cursor-pointer"
-            key={chat.id}
-          >
-            <div className="flex items-center justify-center p-6 bg-gray-300/60 rounded-full h-15 w-15">
-              <Avatar>
-                <AvatarImage src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVzZXItaWNvbiBsdWNpZGUtdXNlciI+PHBhdGggZD0iTTE5IDIxdi0yYTQgNCAwIDAgMC00LTRIOWE0IDQgMCAwIDAtNCA0djIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjciIHI9IjQiLz48L3N2Zz4=" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-xl capitalize">
-                  {chat.user.name}
-                </h3>
-                <span className="text-zinc-500/80 font-medium">
-                  {chat.latestMessage.timestamp}
-                </span>
-              </div>
-              <p className="text-zinc-500/80 font-medium">
-                {chat.latestMessage.text}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </>
+    <div className="flex items-center space-x-4">
+      <div className="relative">
+        <Avatar className="h-14 w-14">
+          <AvatarImage
+            src={chat.avatar || "/placeholder.svg"}
+            alt={chat.name}
+          />
+          <AvatarFallback className="dark:bg-[#EAEAEA]">
+            {chat.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")}
+          </AvatarFallback>
+        </Avatar>
+        {chat.online && (
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
+            {chat.name}
+          </p>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {chat.time}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+            {chat.lastMessage}
+          </p>
+          {chat.unread > 0 && (
+            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-500 rounded-full ml-2">
+              {chat.unread}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

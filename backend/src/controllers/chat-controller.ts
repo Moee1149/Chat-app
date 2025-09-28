@@ -26,34 +26,35 @@ export class ChatController {
       );
 
       if (existingChat) {
-        // Chat already exists, just add/update contact if needed
-        // const userContact = await this.userContactModel.addNewContact(
-        //   senderId,
-        //   receiverId,
-        //   firstName,
-        //   lastName,
-        // );
         return res.status(200).json({
           chat: existingChat,
-          // userContact,
           message: "Chat already exists",
+          isCreated: false,
         });
       }
 
       // Create new chat
       const newChat = await this.chatModel.addNewChat(senderId, receiverId);
+
       const userContact = await this.userContactModel.addNewContact(
         senderId,
         receiverId,
         firstName,
         lastName,
       );
+
       res.status(201).json({
         chat: newChat,
         userContact,
         message: "New chat created",
+        isCreated: true,
       });
     } catch (error) {
+      console.error("Error in handleAddNewChat:", error);
+      console.error(
+        "Error stack:",
+        error instanceof Error ? error.stack : "No stack trace",
+      );
       next(error);
     }
   }

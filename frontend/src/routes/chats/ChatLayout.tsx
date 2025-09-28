@@ -1,22 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  Search,
   Send,
   MessageCircle,
-  Sun,
-  Moon,
   MoreVertical,
   Phone,
   Video,
   Info,
-  Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import AddNewUserDialog from "./components/AddNewUser";
+import ChatSideBar from "./components/ChatSideBar";
 
 // Dummy data
 const chats = [
@@ -133,7 +128,6 @@ const messages = {
 
 export default function ChatApp() {
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -145,10 +139,6 @@ export default function ChatApp() {
   useEffect(() => {
     scrollToBottom();
   }, [selectedChat]);
-
-  const filteredChats = chats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
 
   const selectedChatData = chats.find((chat) => chat.id === selectedChat);
   const chatMessages = selectedChat
@@ -167,114 +157,12 @@ export default function ChatApp() {
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>
       <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         {/* Left Sidebar */}
-        <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                ChatWave
-              </h1>
-              <div className="space-x-3">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-gray-600 dark:text-gray-300 cursor-pointer"
-                    >
-                      <Plus
-                        className="fill-gray-100 cursor-pointer hover:stroke-gray-600"
-                        size={20}
-                      />
-                    </Button>
-                  </DialogTrigger>
-                  <AddNewUserDialog />
-                </Dialog>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="text-gray-600 dark:text-gray-300 cursor-pointer"
-                >
-                  {isDarkMode ? (
-                    <Sun className="h-5 w-5" />
-                  ) : (
-                    <Moon className="h-5 w-5" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Chat List */}
-          <ScrollArea className="flex-1">
-            <div className="p-4">
-              {filteredChats.map((chat) => (
-                <div
-                  key={chat.id}
-                  className={`p-4 rounded-xl cursor-pointer transition-colors duration-200 mb-3 ${
-                    selectedChat === chat.id
-                      ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                  }`}
-                  onClick={() => setSelectedChat(chat.id)}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <Avatar className="h-14 w-14">
-                        <AvatarImage
-                          src={chat.avatar || "/placeholder.svg"}
-                          alt={chat.name}
-                        />
-                        <AvatarFallback className="dark:bg-[#EAEAEA]">
-                          {chat.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      {chat.online && (
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                          {chat.name}
-                        </p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {chat.time}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                          {chat.lastMessage}
-                        </p>
-                        {chat.unread > 0 && (
-                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-500 rounded-full ml-2">
-                            {chat.unread}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
+        <ChatSideBar
+          selectedChat={selectedChat}
+          setSelectedChat={setSelectedChat}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
         {/* Right Main Chat Area */}
         <div className="flex-1 flex flex-col min-h-0">

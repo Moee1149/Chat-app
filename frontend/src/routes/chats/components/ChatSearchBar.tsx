@@ -1,15 +1,40 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 
-export default function ChatSearchBar() {
+interface ChatSearchBarProps {
+  onSearchChange?: (query: string) => void;
+}
+
+export default function ChatSearchBar({ onSearchChange }: ChatSearchBarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    onSearchChange?.(query);
+  };
+
   return (
-    <div className="mr-4 relative flex items-center mt-2 p-2">
-      <Search className="absolute left-4" size={20} />
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
       <Input
-        placeholder="Search or start a new chat"
-        className="pl-10  focus:outline-blue-500"
+        placeholder="Search conversations..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        className="pl-10 bg-gray-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-blue-500"
       />
-      <X className="absolute right-5 cursor-pointer" size={20} />
+      {searchQuery && (
+        <button
+          onClick={() => {
+            setSearchQuery("");
+            onSearchChange?.("");
+          }}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
