@@ -18,15 +18,60 @@ export class ChatController {
       if (!senderId || !receiverId || !firstName || !lastName) {
         throw new BadRequest("All fields are required");
       }
-      const user = await this.chatModel.addNewChat(senderId, receiverId);
+
+      // Check if chat already exists
+      const existingChat = await this.chatModel.findChatBetweenUsers(
+        senderId,
+        receiverId,
+      );
+
+      if (existingChat) {
+        // Chat already exists, just add/update contact if needed
+        // const userContact = await this.userContactModel.addNewContact(
+        //   senderId,
+        //   receiverId,
+        //   firstName,
+        //   lastName,
+        // );
+        return res.status(200).json({
+          chat: existingChat,
+          // userContact,
+          message: "Chat already exists",
+        });
+      }
+
+      // Create new chat
+      const newChat = await this.chatModel.addNewChat(senderId, receiverId);
       const userContact = await this.userContactModel.addNewContact(
         senderId,
         receiverId,
         firstName,
         lastName,
       );
-      res.status(201).json({ user, userContact });
+      res.status(201).json({
+        chat: newChat,
+        userContact,
+        message: "New chat created",
+      });
     } catch (error) {
+      next(error);
+    }
+  }
+
+  async handleGetAllChatForUser(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    const { userId } = req.params;
+    if (!userId) {
+      throw new BadRequest("User ID is required");
+    }
+    try {
+      const chats = await this.chatModel.getAllChatForUser(userId);
+      res.status(200).json(chats);
+    } catch (error) {
+      console.error(error);
       next(error);
     }
   }
