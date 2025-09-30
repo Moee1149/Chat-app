@@ -70,7 +70,42 @@ export class ChatController {
     }
     try {
       const chats = await this.chatModel.getAllChatForUser(userId);
-      res.status(200).json(chats);
+      // Transform the data to include custom names, last message, and unread counts
+      const chatsWithDetails = chats.map((chat) => {
+        const otherUsers = chat.users.filter((user) => user.id !== userId);
+        const userParticipant = chat.chatParticipants[0]; // Current user's participant record
+
+        const usersWithCustomNames = otherUsers.map((user) => {
+          const customContact = user.asContacts.find(
+            (contact) => contact.FirstName && contact.LastName,
+          );
+
+          return {
+            id: user.id,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            bio: user.bio,
+            isOnline: user.isOnline,
+            lastSeen: user.lastSeen,
+            profilePictureUrl: user.profilePictureUrl,
+            customName: customContact
+              ? `${customContact.FirstName} ${customContact.LastName}`
+              : null,
+          };
+        });
+
+        return {
+          id: chat.id,
+          lastMessage: chat.lastMessage || "",
+          lastMessageAt: chat.lastMessageAt,
+          createdAt: chat.createdAt,
+          updatedAt: chat.updatedAt,
+          unreadCount: userParticipant?.unreadCount || 0,
+          otherUsers: usersWithCustomNames,
+        };
+      });
+      res.status(200).json(chatsWithDetails);
     } catch (error) {
       console.error(error);
       next(error);

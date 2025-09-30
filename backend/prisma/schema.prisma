@@ -9,19 +9,22 @@ datasource db {
 }
 
 model User {
-  id                String        @id @default(cuid())
-  email             String        @unique
+  id                String    @id @default(cuid())
+  email             String    @unique
   password          String
-  mobile_number     String        @unique
-  bio               String        @default("")
+  mobile_number     String    @unique
+  bio               String    @default("")
   firstname         String
   lastname          String
-  isOnline          Boolean       @default(false)
-  profilePictureUrl String?       @default("")
-  createdAt         DateTime      @default(now())
-  chats             Chat[]
-  contacts          UserContact[] @relation("UserContactsOwner")
-  asContacts        UserContact[] @relation("UserContactsContact")
+  isOnline          Boolean   @default(false)
+  lastSeen          DateTime?
+  profilePictureUrl String?   @default("")
+  createdAt         DateTime  @default(now())
+
+  chats            Chat[]
+  contacts         UserContact[]     @relation("UserContactsOwner")
+  asContacts       UserContact[]     @relation("UserContactsContact")
+  chatParticipants ChatParticipant[]
 }
 
 model UserContact {
@@ -38,10 +41,29 @@ model UserContact {
 }
 
 model Chat {
-  id        String    @id @default(cuid())
-  users     User[]
-  messages  Message[]
-  createdAt DateTime  @default(now())
+  id            String    @id @default(cuid())
+  lastMessage   String?   @default("")
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  users            User[]
+  messages         Message[]
+  chatParticipants ChatParticipant[]
+}
+
+// Add this new model for better chat management
+model ChatParticipant {
+  id          String    @id @default(cuid())
+  chatId      String
+  userId      String
+  unreadCount Int       @default(0)
+  lastReadAt  DateTime?
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
 }
 
 model Message {

@@ -7,22 +7,25 @@ import { Sun, Moon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import AddNewUserDialog from "./AddNewUser";
+import type { Chat } from "@/types/chat-types";
+import { useSearchParams } from "react-router";
 
 interface ChatSideBarProps {
-  selectedChat: number | null;
-  setSelectedChat: (chatId: number | null) => void;
+  chats: Chat[];
+  selectedChat: string | null;
   isDarkMode: boolean;
   setIsDarkMode: (isDark: boolean) => void;
 }
 
 export default function ChatSideBar({
+  chats,
   selectedChat,
-  setSelectedChat,
   isDarkMode,
   setIsDarkMode,
 }: ChatSideBarProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [, setSearchParams] = useSearchParams();
 
   const closeDialog = () => {
     setIsDialogOpen(false);
@@ -32,8 +35,8 @@ export default function ChatSideBar({
     setSearchQuery(query);
   };
 
-  const handleChatSelect = (chatId: number) => {
-    setSelectedChat(chatId);
+  const handleChatSelect = (chatId: string) => {
+    setSearchParams({ chatId });
   };
 
   return (
@@ -81,6 +84,7 @@ export default function ChatSideBar({
 
       {/* Chat List */}
       <UserChatLists
+        chats={chats}
         selectedChat={selectedChat}
         onChatSelect={handleChatSelect}
         searchQuery={searchQuery}

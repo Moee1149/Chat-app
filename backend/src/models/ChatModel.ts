@@ -27,6 +27,7 @@ export class ChatModel {
 
   async getAllChatForUser(userId: string) {
     try {
+      // Get all chats for the user, including chat participants for unread count
       const chats = await prisma.chat.findMany({
         where: {
           users: {
@@ -36,6 +37,7 @@ export class ChatModel {
           },
         },
         include: {
+          // Include users to get their details
           users: {
             include: {
               asContacts: {
@@ -49,40 +51,20 @@ export class ChatModel {
               },
             },
           },
+          // Include chatParticipants to get unread count
+          chatParticipants: {
+            where: {
+              userId: userId, // Get only this user's participant record
+            },
+          },
+        },
+        orderBy: {
+          // Sort by last message time (most recent first)
+          updatedAt: "desc",
         },
       });
 
-      // Transform the data to include custom names
-      const chatsWithCustomNames = chats.map((chat) => {
-        const otherUsers = chat.users.filter((user) => user.id !== userId);
-
-        const usersWithCustomNames = otherUsers.map((user) => {
-          const customContact = user.asContacts.find(
-            (contact) => contact.FirstName && contact.LastName,
-          );
-
-          return {
-            id: user.id,
-            email: user.email,
-            firstname: customContact?.FirstName || user.firstname,
-            lastname: customContact?.LastName || user.lastname,
-            bio: user.bio,
-            isOnline: user.isOnline,
-            profilePictureUrl: user.profilePictureUrl,
-            customName: customContact
-              ? `${customContact.FirstName} ${customContact.LastName}`
-              : null,
-          };
-        });
-
-        return {
-          id: chat.id,
-          createdAt: chat.createdAt,
-          otherUsers: usersWithCustomNames,
-        };
-      });
-
-      return chatsWithCustomNames;
+      return chats;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         console.log("Primsa Error: ", error.code);

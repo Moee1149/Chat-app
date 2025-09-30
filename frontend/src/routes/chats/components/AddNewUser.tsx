@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const backend_url = import.meta.env.VITE_BACKEND_URL;
 
@@ -26,9 +27,9 @@ type User = {
   mobile_number: string;
 };
 
-type CurrentUserResponse = {
-  user: User;
-};
+// type CurrentUserResponse = {
+//   user: User;
+// };
 
 type FindUserResponse = User[];
 
@@ -59,14 +60,14 @@ async function handleAddNewChat({
   });
 }
 
-async function getCurrentUser() {
-  return await axios.get<CurrentUserResponse>(
-    `${backend_url}/user/currentUser`,
-    {
-      withCredentials: true,
-    },
-  );
-}
+// async function getCurrentUser() {
+//   return await axios.get<CurrentUserResponse>(
+//     `${backend_url}/user/currentUser`,
+//     {
+//       withCredentials: true,
+//     },
+//   );
+// }
 
 export default function AddNewUserDialog({
   onClose,
@@ -87,10 +88,12 @@ export default function AddNewUserDialog({
     showMessage: false,
   });
 
-  const { data } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: getCurrentUser,
-  });
+  // const { data } = useQuery({
+  //   queryKey: ["currentUser"],
+  //   queryFn: getCurrentUser,
+  // });
+
+  const { data } = useCurrentUser();
 
   const mutation = useMutation({
     mutationFn: fetchUserByPhoneNumber,
@@ -125,17 +128,29 @@ export default function AddNewUserDialog({
         toast.info("Loading existing chat...");
       }
 
+      setFirstName("");
+      setLastName("");
+      setPhone("");
+      setValidationState({
+        isValid: true,
+        message: "",
+        showMessage: false,
+      });
+
       // Close dialog and navigate
       onClose?.();
-      router(`/chats/?chatId=${data?.data?.chat.id}`);
+      router(`/chats?chatId=${data?.data?.chat.id}`);
     },
     onError: (error) => {
       console.error(error);
-      // setValidationState({
-      //   isValid: false,
-      //   message: "Error adding chat",
-      //   showMessage: true,
-      // });
+      toast.error("Error adding chat");
+      setLastName("");
+      setPhone("");
+      setValidationState({
+        isValid: true,
+        message: "",
+        showMessage: false,
+      });
     },
   });
 

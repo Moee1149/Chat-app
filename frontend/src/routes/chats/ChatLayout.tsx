@@ -12,55 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatSideBar from "./components/ChatSideBar";
-
-// Dummy data
-const chats = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    avatar: "/placeholder.svg?height=40&width=40&text=SJ",
-    lastMessage: "Hey! How are you doing today?",
-    time: "2m ago",
-    unread: 2,
-    online: true,
-  },
-  {
-    id: 2,
-    name: "Mike Chen",
-    avatar: "/placeholder.svg?height=40&width=40&text=MC",
-    lastMessage: "The project looks great! 👍",
-    time: "1h ago",
-    unread: 0,
-    online: true,
-  },
-  {
-    id: 3,
-    name: "Emily Davis",
-    avatar: "/placeholder.svg?height=40&width=40&text=ED",
-    lastMessage: "Can we schedule a meeting?",
-    time: "3h ago",
-    unread: 1,
-    online: false,
-  },
-  {
-    id: 4,
-    name: "Alex Rodriguez",
-    avatar: "/placeholder.svg?height=40&width=40&text=AR",
-    lastMessage: "Thanks for your help!",
-    time: "1d ago",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: 5,
-    name: "Lisa Wang",
-    avatar: "/placeholder.svg?height=40&width=40&text=LW",
-    lastMessage: "See you tomorrow 😊",
-    time: "2d ago",
-    unread: 0,
-    online: true,
-  },
-];
+import { useSearchParams } from "react-router";
+import type { Chat } from "@/types/chat-types";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const messages = {
   1: [
@@ -126,11 +82,28 @@ const messages = {
   ],
 };
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+async function getAllChats(userId: string): Promise<Chat[]> {
+  const response = await axios.get(`${backendUrl}/chat/get_chats/${userId}`);
+  return response.data;
+}
+
 export default function ChatApp() {
-  const [selectedChat, setSelectedChat] = useState<number | null>(null);
+  const [searchParams] = useSearchParams();
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { data } = useCurrentUser();
+  const userId = data?.data?.user?.id;
+
+  // get all chat
+  const { data: chats = [] } = useQuery<Chat[]>({
+    queryKey: ["chats", userId],
+    queryFn: () => getAllChats(userId),
+    enabled: !!userId,
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -139,6 +112,15 @@ export default function ChatApp() {
   useEffect(() => {
     scrollToBottom();
   }, [selectedChat]);
+
+  useEffect(() => {
+    function getChatId() {
+      const chatId = searchParams.get("chatId");
+      return chatId ? chatId : null;
+    }
+    const chatId = getChatId();
+    setSelectedChat(chatId);
+  }, [searchParams]);
 
   const selectedChatData = chats.find((chat) => chat.id === selectedChat);
   const chatMessages = selectedChat
@@ -158,8 +140,8 @@ export default function ChatApp() {
       <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         {/* Left Sidebar */}
         <ChatSideBar
+          chats={chats}
           selectedChat={selectedChat}
-          setSelectedChat={setSelectedChat}
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
         />
@@ -174,11 +156,14 @@ export default function ChatApp() {
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage
-                        src={selectedChatData?.avatar || "/placeholder.svg"}
-                        alt={selectedChatData?.name}
+                        src={
+                          selectedChatData?.otherUsers[0]?.profilePictureUrl ||
+                          "/placeholder.svg"
+                        }
+                        alt={selectedChatData?.otherUsers[0]?.customName}
                       />
                       <AvatarFallback className="dark:bg-[#EAEAEA]">
-                        {selectedChatData?.name
+                        {selectedChatData?.otherUsers[0]?.customName
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
@@ -186,10 +171,10 @@ export default function ChatApp() {
                     </Avatar>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {selectedChatData?.name}
+                        {selectedChatData?.otherUsers[0]?.customName}
                       </h2>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {selectedChatData?.online
+                        {selectedChatData?.otherUsers[0]?.isOnline
                           ? "Online"
                           : "Last seen recently"}
                       </p>
