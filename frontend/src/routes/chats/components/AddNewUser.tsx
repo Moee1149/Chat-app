@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -60,15 +60,6 @@ async function handleAddNewChat({
   });
 }
 
-// async function getCurrentUser() {
-//   return await axios.get<CurrentUserResponse>(
-//     `${backend_url}/user/currentUser`,
-//     {
-//       withCredentials: true,
-//     },
-//   );
-// }
-
 export default function AddNewUserDialog({
   onClose,
 }: {
@@ -87,11 +78,6 @@ export default function AddNewUserDialog({
     message: "",
     showMessage: false,
   });
-
-  // const { data } = useQuery({
-  //   queryKey: ["currentUser"],
-  //   queryFn: getCurrentUser,
-  // });
 
   const { data } = useCurrentUser();
 

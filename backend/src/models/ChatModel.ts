@@ -74,37 +74,20 @@ export class ChatModel {
     }
   }
 
-  async findChatBetweenUsers(user1Id: string, user2Id: string) {
+  async getMessagesByChatId(chatId: string) {
     try {
-      const chat = await prisma.chat.findFirst({
+      const messages = await prisma.message.findMany({
         where: {
-          AND: [
-            {
-              users: {
-                some: {
-                  id: user1Id,
-                },
-              },
-            },
-            {
-              users: {
-                some: {
-                  id: user2Id,
-                },
-              },
-            },
-          ],
+          chatId: chatId,
         },
-        include: {
-          users: true,
+        orderBy: {
+          createdAt: "asc", // Order messages from oldest to newest
         },
       });
-
-      // Return only if it's a 1-on-1 chat (exactly 2 users)
-      return chat && chat.users.length === 2 ? chat : null;
+      return messages;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        console.log("Primsa Error: ", error.code);
+        console.log("Prisma Error: ", error.code);
         throw new DatabaseError("Database error: " + error.code);
       }
       throw error;

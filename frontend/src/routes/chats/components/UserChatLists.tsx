@@ -31,7 +31,7 @@ export default function UserChatLists({
         {filteredChats.map((chat) => (
           <div
             key={chat.id}
-            className={`p-3 rounded-xl cursor-pointer transition-colors duration-200 mb-3 ${
+            className={`p-3 rounded-xl cursor-pointer transition-colors duration-200 mb-2 ${
               selectedChat === chat.id
                 ? "bg-blue-50 dark:bg-blue-900/20  border-blue-500"
                 : "hover:bg-gray-50 dark:hover:bg-gray-700"
