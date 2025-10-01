@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
 import { BadRequest } from "../error";
-import { ChatModel } from "../models/ChatModel";
+import { ChatModel, type Message } from "../models/ChatModel";
 import { UserContactModel } from "../models/UserContactModel";
 
 export class ChatController {
@@ -123,6 +123,22 @@ export class ChatController {
       const messages = await this.chatModel.getMessagesByChatId(chatId);
       console.log(messages);
       res.status(200).json(messages);
+    } catch (err) {
+      console.log(err);
+      next(err);
+    }
+  }
+
+  async handleAddNewMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { chatId, text, senderId } = req.body;
+      const msg: Message = {
+        chatId,
+        senderId,
+        text,
+      };
+      const message = await this.chatModel.saveMessage(msg);
+      res.status(201).json(message);
     } catch (err) {
       console.log(err);
       next(err);

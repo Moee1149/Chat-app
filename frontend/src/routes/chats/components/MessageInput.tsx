@@ -1,18 +1,42 @@
+import { useState } from "react";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useSearchParams } from "react-router";
+
+import type { Message } from "@/types/message-types";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
-import { useState } from "react";
+
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export default function MessageInput() {
-  //state
   const [newMessage, setNewMessage] = useState("");
+  const { data } = useCurrentUser();
+  const [searchParams] = useSearchParams();
+
+  const chatId = searchParams.get("id") as string;
+  const senderId = data?.data?.user?.id as string;
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (message: Message) => {
+      await axios.post(`${backendUrl}/chat/message`, message);
+    },
+    onSuccess: () => {
+      console.log("Message sent successfully");
+      setNewMessage("");
+    },
+  });
 
   //handler
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      // In a real app, you'd send this to your backend
       console.log("Sending message:", newMessage);
       setNewMessage("");
+
+      sendMessageMutation.mutate({ text: newMessage, senderId, chatId });
     }
   };
 

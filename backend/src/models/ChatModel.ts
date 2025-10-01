@@ -2,6 +2,17 @@ import { prisma } from "../config/db";
 import { DatabaseError } from "../error";
 import { PrismaClientKnownRequestError } from "../generated/prisma/runtime/library";
 
+export type Message = {
+  id?: string;
+  text: string;
+  senderId: string; // User ID of sender
+  fileUrl?: string;
+  chatId: string;
+  seen?: boolean;
+  delivered?: boolean;
+  createdAt?: string; // This will be ISO string in frontend
+};
+
 export class ChatModel {
   async addNewChat(senderId: string, reciverId: string) {
     try {
@@ -85,6 +96,54 @@ export class ChatModel {
         },
       });
       return messages;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        console.log("Prisma Error: ", error.code);
+        throw new DatabaseError("Database error: " + error.code);
+      }
+      throw error;
+    }
+  }
+
+  async saveMessage(msg: Message) {
+    try {
+      const message = await prisma.$transaction(async (tx) => {
+        // Create the message
+        const newMessage = await tx.message.create({
+          data: {
+            text: msg.text,
+            senderId: msg.senderId,
+            chatId: msg.chatId,
+            fileUrl: msg.fileUrl || "",
+          },
+        });
+
+        // Update the chat's last message and time
+        await tx.chat.update({
+          where: { id: msg.chatId },
+          data: {
+            lastMessage: msg.text,
+            lastMessageAt: new Date(),
+          },
+        });
+
+        // Increment unread count for all other participants
+        await tx.chatParticipant.updateMany({
+          where: {
+            chatId: msg.chatId,
+            userId: {
+              not: msg.senderId,
+            },
+          },
+          data: {
+            unreadCount: { increment: 1 },
+          },
+        });
+
+        return newMessage;
+      });
+
+      return message;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         console.log("Prisma Error: ", error.code);

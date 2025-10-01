@@ -1,87 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useSearchParams } from "react-router";
 import axios from "axios";
+import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
+import type { Message } from "@/types/message-types";
+
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-const messages = {
-  1: [
-    {
-      id: 1,
-      text: "Hey! How are you doing today?",
-      sender: "other",
-      time: "10:30 AM",
-    },
-    {
-      id: 2,
-      text: "I'm doing great, thanks for asking! How about you?",
-      sender: "me",
-      time: "10:32 AM",
-    },
-    {
-      id: 3,
-      text: "Pretty good! Just working on some new projects",
-      sender: "other",
-      time: "10:35 AM",
-    },
-    {
-      id: 4,
-      text: "That sounds exciting! What kind of projects?",
-      sender: "me",
-      time: "10:36 AM",
-    },
-    {
-      id: 5,
-      text: "Mostly web development stuff. Building some cool React apps",
-      sender: "other",
-      time: "10:38 AM",
-    },
-  ],
-  2: [
-    {
-      id: 1,
-      text: "The project looks great! 👍",
-      sender: "other",
-      time: "9:15 AM",
-    },
-    {
-      id: 2,
-      text: "Thank you! I put a lot of effort into it",
-      sender: "me",
-      time: "9:20 AM",
-    },
-    {
-      id: 3,
-      text: "It really shows. The design is very clean",
-      sender: "other",
-      time: "9:22 AM",
-    },
-  ],
-  3: [
-    {
-      id: 1,
-      text: "Can we schedule a meeting?",
-      sender: "other",
-      time: "7:45 AM",
-    },
-    { id: 2, text: "What time works for you?", sender: "me", time: "8:00 AM" },
-  ],
-};
-
-type Message = {
-  id: string;
-  text: string;
-  senderId: string; // User ID of sender
-  fileUrl: string | null;
-  chatId: string;
-  seen: boolean;
-  delivered: boolean;
-  createdAt: string; // This will be ISO string in frontend
-};
 
 async function getAllMessages(chatId: string) {
   const response = await axios.get(`${backendUrl}/chat/message/${chatId}`);

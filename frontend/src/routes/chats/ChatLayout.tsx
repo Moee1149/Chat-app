@@ -43,7 +43,6 @@ export default function ChatApp() {
   }, [searchParams]);
 
   const selectedChatData = chats.find((chat) => chat.id === selectedChat);
-  console.log(selectedChatData);
 
   return (
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>
