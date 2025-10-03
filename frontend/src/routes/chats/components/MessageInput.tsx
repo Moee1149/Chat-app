@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import axios from "axios";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSearchParams } from "react-router";
+import { useSocket } from "@/hooks/useSocket";
 
 import type { Message } from "@/types/message-types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
-import { useSocket } from "@/hooks/useSocket";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -18,29 +18,52 @@ export default function MessageInput() {
   const { data } = useCurrentUser();
   const [searchParams] = useSearchParams();
   const { socket } = useSocket();
+  const queryClient = useQueryClient();
+  const id = useId();
 
   const chatId = searchParams.get("chatId") as string;
   const senderId = data?.data?.user?.id as string;
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async (message: Message) => {
-      await axios.post(`${backendUrl}/chat/message`, message);
-      // real time connection setup
-    },
-    onSuccess: () => {
-      console.log("Message sent successfully");
-      setNewMessage("");
-    },
-  });
+  // const sendMessageMutation = useMutation({
+  //   mutationFn: async (message: Message) => {
+  //     await axios.post(`${backendUrl}/chat/message`, message);
+  //     // real time connection setup
+  //   },
+  //   onSuccess: () => {
+  //     console.log("Message sent successfully");
+  //     setNewMessage("");
+  //   },
+  // });
 
   //handler
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      console.log("Sending message:", newMessage);
-      setNewMessage("");
-      socket?.emit("send_message", { text: newMessage, senderId, chatId });
-      sendMessageMutation.mutate({ text: newMessage, senderId, chatId });
-    }
+    if (!newMessage.trim() || !socket) return;
+    // Create a temporary ID for optimistic updates
+    const tempId = `${id}_${Date.now() + Math.random()}`;
+    const timestamp = new Date().toISOString();
+
+    // Create message object
+    const messageData: Message = {
+      id: tempId,
+      text: newMessage.trim(),
+      senderId,
+      chatId,
+      createdAt: timestamp,
+    };
+
+    // Optimistically update UI
+    queryClient.setQueryData(
+      ["messages", chatId],
+      (oldMessages: Message[] = []) => {
+        return [...oldMessages, messageData];
+      },
+    );
+
+    // Clear input field immediately for better UX
+    setNewMessage("");
+
+    // socket?.emit("send_message", { text: newMessage.trim(), senderId, chatId });
+    // sendMessageMutation.mutate({ text: newMessage, senderId, chatId });
   };
 
   // useEffect(() => {

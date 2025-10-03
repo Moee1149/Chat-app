@@ -25,25 +25,53 @@ export default function MessageArea() {
   const [searchParams] = useSearchParams();
   const chatId = searchParams.get("chatId");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { data } = useCurrentUser();
   const senderId = data?.data?.user?.id;
 
-  const { data: chatMessages = [] } = useQuery<Message[]>({
+  const { data: chatMessages = [], isLoading } = useQuery<Message[]>({
     queryKey: ["messages", chatId],
     queryFn: () => getAllMessages(chatId!),
     enabled: !!chatId,
   });
 
   const scrollToBottom = () => {
+    // First try using scrollIntoView
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+    // As a fallback, also try to scroll the ScrollArea component
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]",
+      );
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    }
   };
 
+  // Scroll to bottom when messages change or chat changes
   useEffect(() => {
-    scrollToBottom();
-  }, []);
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [chatMessages, chatId]);
+
+  // Also scroll to bottom when loading completes
+  useEffect(() => {
+    if (!isLoading && chatMessages.length > 0) {
+      scrollToBottom();
+    }
+  }, [isLoading, chatMessages.length]);
 
   return (
-    <ScrollArea className="flex-1 p-4 bg-gray-50 dark:bg-gray-900">
+    <ScrollArea
+      className="flex-1 p-4 bg-gray-50 dark:bg-gray-900 overflow-y-auto"
+      ref={scrollAreaRef}
+    >
       <div className="space-y-4">
         {chatMessages.length > 0 ? (
           chatMessages.map((message) => {
@@ -78,11 +106,11 @@ export default function MessageArea() {
                     )}
                   </div>
                   <p
-                    className={`text-xs mt-1 text-gray-500 ${
+                    className={`text-[0.65rem] mt-1 text-gray-500 ${
                       isCurrentUser ? "text-right" : "dark:text-gray-400 ml-2"
                     }`}
                   >
-                    {formatMessageTime(message.createdAt)}
+                    {formatMessageTime(message.createdAt ?? "")}
                   </p>
                 </div>
               </div>
