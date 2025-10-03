@@ -17,10 +17,16 @@ export default function SingleChatList({ chat }: SingleChatListProps) {
         <Avatar className="h-14 w-14">
           <AvatarImage
             src={chat.otherUsers[0]?.profilePictureUrl || "/placeholder.svg"}
-            alt={chat.otherUsers[0]?.customName}
+            alt={
+              chat.otherUsers[0]?.customName ?? chat.otherUsers[0]?.firstname
+            }
           />
           <AvatarFallback className="dark:bg-[#EAEAEA]">
-            {chat.otherUsers[0]?.customName
+            {(
+              chat.otherUsers[0]?.customName ??
+              chat.otherUsers[0]?.firstname ??
+              "U"
+            )
               .split(" ")
               .map((n) => n[0])
               .join("")}
@@ -34,7 +40,7 @@ export default function SingleChatList({ chat }: SingleChatListProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
-            {chat.otherUsers[0]?.customName}
+            {chat.otherUsers[0]?.customName ?? chat.otherUsers[0]?.firstname}
           </p>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {timeDisplay}

@@ -133,7 +133,7 @@ export const handleUserLogin: RequestHandler = async (
       sameSite: "lax",
     });
     console.log(token, "token send");
-    res.json({ message: "Login Sucessfull" });
+    res.json({ message: "Login Sucessfull", user });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
       console.log("Prisma error:", error.message);

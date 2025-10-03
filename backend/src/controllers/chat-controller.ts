@@ -119,9 +119,7 @@ export class ChatController {
   ) {
     try {
       const { chatId } = req.params;
-      console.log(chatId);
       const messages = await this.chatModel.getMessagesByChatId(chatId);
-      console.log(messages);
       res.status(200).json(messages);
     } catch (err) {
       console.log(err);

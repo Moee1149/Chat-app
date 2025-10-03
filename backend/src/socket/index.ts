@@ -1,12 +1,13 @@
 //socket initialization
-import { Server } from "socket.io";
+import { Server, type Socket } from "socket.io";
 import type { Server as HTTPServer } from "http";
+import { attachSocketEvents } from "./events/events";
 
 //Track active connections
-const connections = new Map();
+export const connections = new Map<string, Socket>();
 
 //Track user connections
-const userSessions = new Map();
+export const userSessions = new Map<string, Set<string>>();
 
 export function initialzeSocketIO(httpServer: HTTPServer) {
   //create socket.IO server
@@ -22,20 +23,21 @@ export function initialzeSocketIO(httpServer: HTTPServer) {
   io.on("connection", (socket) => {
     //store socket reference
     connections.set(socket.id, socket);
-    console.log(connections);
-    // //Track user session
-    // const userId = socket.data.userId;
-    // if (userId) {
-    //   if (!userSessions.has(userId)) {
-    //     userSessions.set(userId, new Set());
-    //   }
-    //   userSessions.get(userId).add(socket.id);
-    // }
-
-    // console.log(
-    //   `Socket connected: ${socket.id}${userId ? ` (User: ${userId})` : ""}`,
-    // );
+    //Track user session
+    socket.on("user_connected", (id: string) => {
+      const userId = id;
+      if (!userSessions.has(userId)) {
+        userSessions.set(userId, new Set());
+      }
+      userSessions.get(userId)!.add(socket.id);
+      console.log(`User ${userId} connected (Socket ID: ${socket.id})`);
+      attachSocketEvents(socket, userId);
+    });
   });
 
   return io;
+}
+
+export function isUserConnected(userId: string): boolean {
+  return userSessions.has(userId) && userSessions.get(userId)!.size > 0;
 }

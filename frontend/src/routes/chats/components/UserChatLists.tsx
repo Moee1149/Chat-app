@@ -18,11 +18,16 @@ export default function UserChatLists({
   searchQuery = "",
 }: UserChatListsProps) {
   const filteredChats = useMemo(() => {
-    return chats.filter((chat) =>
-      chat.otherUsers[0].customName
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
-    );
+    return chats.filter((chat) => {
+      // Get the first other user in the chat
+      const otherUser = chat?.otherUsers[0];
+
+      // Use customName if available, otherwise fall back to their actual name
+      const displayName = otherUser?.customName ?? otherUser?.firstname ?? "";
+
+      // Case-insensitive search on the display name
+      return displayName.toLowerCase().includes(searchQuery.toLowerCase());
+    });
   }, [chats, searchQuery]);
 
   return (

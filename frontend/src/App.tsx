@@ -7,6 +7,7 @@ import { InputOTPControlled } from "./routes/auth/verification/InputOTPControlle
 import CreateNewAccount from "./routes/auth/signup/CreateNewAccount";
 import NotFoundPage from "./components/not-foundpage";
 import ChatLayout from "./routes/chats/ChatLayout";
+import { SocketProvider } from "./context/SocketContext";
 
 export default function App() {
   return (
@@ -18,7 +19,14 @@ export default function App() {
         <Route path="signup/verification" element={<InputOTPControlled />} />
         <Route path="signup/create-new-user" element={<CreateNewAccount />} />
       </Route>
-      <Route path="/chats" element={<ChatLayout />} />
+      <Route
+        path="/chats"
+        element={
+          <SocketProvider>
+            <ChatLayout />
+          </SocketProvider>
+        }
+      />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

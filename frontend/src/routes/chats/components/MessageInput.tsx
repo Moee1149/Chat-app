@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -9,6 +9,7 @@ import type { Message } from "@/types/message-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
+import { useSocket } from "@/hooks/useSocket";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -16,13 +17,14 @@ export default function MessageInput() {
   const [newMessage, setNewMessage] = useState("");
   const { data } = useCurrentUser();
   const [searchParams] = useSearchParams();
+  const { socket } = useSocket();
 
-  const chatId = searchParams.get("id") as string;
+  const chatId = searchParams.get("chatId") as string;
   const senderId = data?.data?.user?.id as string;
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: Message) => {
-      // await axios.post(`${backendUrl}/chat/message`, message);
+      await axios.post(`${backendUrl}/chat/message`, message);
       // real time connection setup
     },
     onSuccess: () => {
@@ -36,10 +38,16 @@ export default function MessageInput() {
     if (newMessage.trim()) {
       console.log("Sending message:", newMessage);
       setNewMessage("");
-
+      socket?.emit("send_message", { text: newMessage, senderId, chatId });
       sendMessageMutation.mutate({ text: newMessage, senderId, chatId });
     }
   };
+
+  // useEffect(() => {
+  //   if (socket) {
+  //     socket.emit("send_message", { text: "hello", senderId, chatId });
+  //   }
+  // }, []);
 
   return (
     <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">

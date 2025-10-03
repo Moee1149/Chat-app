@@ -42,10 +42,12 @@ export default function LoginPage() {
         result.data,
         { withCredentials: true },
       );
+      console.log(response.data);
       toast.success(response.data?.message, {
         position: "top-center",
       });
       localStorage.clear();
+      localStorage.setItem("userId", response.data?.user?.id);
       navigate("/chats");
     } catch (error) {
       if (axios.isAxiosError(error)) {

@@ -21,7 +21,11 @@ export default function ChatHeader({ selectedChatData }: ChatHeaderProps) {
               alt={selectedChatData?.otherUsers[0]?.customName}
             />
             <AvatarFallback className="dark:bg-[#EAEAEA]">
-              {selectedChatData?.otherUsers[0]?.customName
+              {(
+                selectedChatData?.otherUsers[0]?.customName ??
+                selectedChatData?.otherUsers[0]?.firstname ??
+                "U"
+              )
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
@@ -29,7 +33,8 @@ export default function ChatHeader({ selectedChatData }: ChatHeaderProps) {
           </Avatar>
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {selectedChatData?.otherUsers[0]?.customName}
+              {selectedChatData?.otherUsers[0]?.customName ??
+                selectedChatData?.otherUsers[0]?.firstname}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {selectedChatData?.otherUsers[0]?.isOnline
