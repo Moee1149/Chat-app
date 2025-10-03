@@ -22,7 +22,8 @@ export default function MessageInput() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: Message) => {
-      await axios.post(`${backendUrl}/chat/message`, message);
+      // await axios.post(`${backendUrl}/chat/message`, message);
+      // real time connection setup
     },
     onSuccess: () => {
       console.log("Message sent successfully");
