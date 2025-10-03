@@ -1,39 +1,36 @@
 import { useEffect, useId, useState } from "react";
-import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
+
 import { useSocket } from "@/hooks/useSocket";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 import type { Message } from "@/types/message-types";
+import type { Chat } from "@/types/chat-types";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+interface MessageType extends Message {
+  tempId: string;
+}
 
-export default function MessageInput() {
+type MessageInputProps = {
+  selectedChatData: Chat | undefined;
+};
+
+export default function MessageInput({ selectedChatData }: MessageInputProps) {
   const [newMessage, setNewMessage] = useState("");
   const { data } = useCurrentUser();
   const [searchParams] = useSearchParams();
   const { socket } = useSocket();
   const queryClient = useQueryClient();
   const id = useId();
+  const receiverId = selectedChatData?.otherUsers[0]?.id;
 
   const chatId = searchParams.get("chatId") as string;
   const senderId = data?.data?.user?.id as string;
-
-  // const sendMessageMutation = useMutation({
-  //   mutationFn: async (message: Message) => {
-  //     await axios.post(`${backendUrl}/chat/message`, message);
-  //     // real time connection setup
-  //   },
-  //   onSuccess: () => {
-  //     console.log("Message sent successfully");
-  //     setNewMessage("");
-  //   },
-  // });
 
   //handler
   const handleSendMessage = () => {
@@ -59,18 +56,16 @@ export default function MessageInput() {
       },
     );
 
-    // Clear input field immediately for better UX
     setNewMessage("");
-
-    // socket?.emit("send_message", { text: newMessage.trim(), senderId, chatId });
-    // sendMessageMutation.mutate({ text: newMessage, senderId, chatId });
+    socket?.emit("send_message", {
+      tempId,
+      text: newMessage.trim(),
+      senderId,
+      chatId,
+      receiverId,
+      status: "pending",
+    });
   };
-
-  // useEffect(() => {
-  //   if (socket) {
-  //     socket.emit("send_message", { text: "hello", senderId, chatId });
-  //   }
-  // }, []);
 
   return (
     <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">

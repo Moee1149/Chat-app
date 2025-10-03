@@ -24,7 +24,7 @@ export function initialzeSocketIO(httpServer: HTTPServer) {
     //store socket reference
     connections.set(socket.id, socket);
     //Track user session
-    socket.on("user_connected", (id: string) => {
+    socket.once("user_connected", (id: string) => {
       const userId = id;
       if (!userSessions.has(userId)) {
         userSessions.set(userId, new Set());

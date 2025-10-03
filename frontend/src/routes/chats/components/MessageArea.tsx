@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import axios from "axios";
+
 import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 import type { Message } from "@/types/message-types";
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;

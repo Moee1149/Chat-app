@@ -1,25 +1,25 @@
-import { ChatModel } from "../../models/ChatModel";
+import { MessageController } from "../../controllers/message-controller";
 import { handleDisconnect } from "./events-handlers";
 import type { Socket } from "socket.io";
 
 type Message = {
-  id?: string;
+  tempId: string;
   text: string;
   senderId: string; // User ID of sender
   fileUrl?: string;
   chatId: string;
-  seen?: boolean;
-  delivered?: boolean;
-  createdAt?: string; // This will be ISO string in frontend
+  receiverId?: string;
+  status: "pending" | "sent" | "failed";
 };
 
 export function attachSocketEvents(socket: Socket, userId: string) {
+  //remove any existiong listeners
+  socket.removeAllListeners("send_message");
   //attach disconnect handler
   socket.on("disconnect", () => handleDisconnect(socket, userId));
 
   //attach customer Events
   socket.on("send_message", (message: Message) => {
-    // Handle sending message logic here
-    console.log(message);
+    MessageController.handleAddNewMessage(socket, message);
   });
 }

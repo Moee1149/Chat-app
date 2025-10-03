@@ -105,7 +105,7 @@ export class ChatModel {
     }
   }
 
-  async saveMessage(msg: Message) {
+  static async saveMessage(msg: Message) {
     try {
       const message = await prisma.$transaction(async (tx) => {
         // Create the message
@@ -115,6 +115,7 @@ export class ChatModel {
             senderId: msg.senderId,
             chatId: msg.chatId,
             fileUrl: msg.fileUrl || "",
+            delivered: true,
           },
         });
 

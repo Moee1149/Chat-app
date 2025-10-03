@@ -1,7 +1,8 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
+import { type Socket } from "socket.io";
 
 import { BadRequest } from "../error";
-import { ChatModel, type Message } from "../models/ChatModel";
+import { ChatModel } from "../models/ChatModel";
 import { UserContactModel } from "../models/UserContactModel";
 
 export class ChatController {
@@ -121,22 +122,6 @@ export class ChatController {
       const { chatId } = req.params;
       const messages = await this.chatModel.getMessagesByChatId(chatId);
       res.status(200).json(messages);
-    } catch (err) {
-      console.log(err);
-      next(err);
-    }
-  }
-
-  async handleAddNewMessage(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { chatId, text, senderId } = req.body;
-      const msg: Message = {
-        chatId,
-        senderId,
-        text,
-      };
-      const message = await this.chatModel.saveMessage(msg);
-      res.status(201).json(message);
     } catch (err) {
       console.log(err);
       next(err);

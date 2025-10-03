@@ -1,4 +1,4 @@
-export type Message = {
+export interface Message {
   id?: string;
   text: string;
   senderId: string; // User ID of sender
@@ -7,4 +7,5 @@ export type Message = {
   seen?: boolean;
   delivered?: boolean;
   createdAt?: string; // This will be ISO string in frontend
-};
+  status?: "pending" | "sent" | "failed";
+}
