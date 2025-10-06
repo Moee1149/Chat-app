@@ -16,16 +16,37 @@ export type Message = {
 export class ChatModel {
   async addNewChat(senderId: string, reciverId: string) {
     try {
-      const newChat = await prisma.chat.create({
-        data: {
-          users: {
-            connect: [{ id: senderId }, { id: reciverId }],
+      const newChat = await prisma.$transaction(async (tx) => {
+        const chat = await tx.chat.create({
+          data: {
+            users: {
+              connect: [{ id: senderId }, { id: reciverId }],
+            },
           },
-        },
-        include: {
-          users: true,
-        },
+          include: {
+            users: true,
+          },
+        });
+
+        await tx.chatParticipant.createMany({
+          data: [
+            {
+              chatId: chat.id,
+              userId: senderId,
+              unreadCount: 0,
+              lastReadAt: new Date(),
+            },
+            {
+              chatId: chat.id,
+              userId: reciverId,
+              unreadCount: 0,
+              lastReadAt: new Date(),
+            },
+          ],
+        });
+        return chat;
       });
+
       return newChat;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -145,6 +166,76 @@ export class ChatModel {
       });
 
       return message;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        console.log("Prisma Error: ", error.code);
+        throw new DatabaseError("Database error: " + error.code);
+      }
+      throw error;
+    }
+  }
+
+  static async getChatParticipants(chatId: string) {
+    try {
+      const chat = await prisma.chat.findUnique({
+        where: { id: chatId },
+        include: {
+          users: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+      return chat?.users || [];
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        console.log("Prisma Error: ", error.code);
+        throw new DatabaseError("Database error: " + error.code);
+      }
+      throw error;
+    }
+  }
+
+  async findChatBetweenUsers(userAId: string, userBId: string) {
+    try {
+      // Find chats where both users are participants
+      const chats = await prisma.chat.findMany({
+        where: {
+          users: {
+            every: {
+              id: {
+                in: [userAId, userBId],
+              },
+            },
+          },
+          AND: [
+            {
+              users: {
+                some: {
+                  id: userAId,
+                },
+              },
+            },
+            {
+              users: {
+                some: {
+                  id: userBId,
+                },
+              },
+            },
+          ],
+        },
+        include: {
+          users: true,
+          chatParticipants: true,
+        },
+      });
+
+      // If we found exactly two users in a chat, it's a direct chat between these users
+      const directChat = chats.find((chat) => chat.users.length === 2);
+
+      return directChat || null;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         console.log("Prisma Error: ", error.code);

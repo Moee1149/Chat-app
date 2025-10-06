@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 
@@ -11,10 +11,6 @@ import type { Chat } from "@/types/chat-types";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-interface MessageType extends Message {
-  tempId: string;
-}
 
 type MessageInputProps = {
   selectedChatData: Chat | undefined;

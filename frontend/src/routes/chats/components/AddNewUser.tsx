@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import type { Chat } from "@/types/chat-types";
 
 const backend_url = import.meta.env.VITE_BACKEND_URL;
 
@@ -78,13 +79,14 @@ export default function AddNewUserDialog({
     message: "",
     showMessage: false,
   });
+  const queryClient = useQueryClient();
 
   const { data } = useCurrentUser();
+  const senderId = data?.data?.user?.id;
 
   const mutation = useMutation({
     mutationFn: fetchUserByPhoneNumber,
     onSuccess: (data) => {
-      console.log(data);
       const userExists = data.data && data.data.length > 0;
       setValidationState({
         isValid: true,
@@ -105,7 +107,6 @@ export default function AddNewUserDialog({
   const addNewChatMutation = useMutation({
     mutationFn: handleAddNewChat,
     onSuccess: (data) => {
-      console.log(data);
       const isNewChat = data?.data?.message?.includes("New chat created");
 
       if (isNewChat) {
@@ -113,6 +114,8 @@ export default function AddNewUserDialog({
       } else {
         toast.info("Loading existing chat...");
       }
+
+      queryClient.invalidateQueries({ queryKey: ["chats", senderId] });
 
       setFirstName("");
       setLastName("");
@@ -202,7 +205,6 @@ export default function AddNewUserDialog({
       mutation.data &&
       mutation.data.data?.length > 0 &&
       mutation.data.data[0]?.id;
-    const senderId = data?.data?.user?.id;
 
     if (!receiverId) {
       toast.error("User not found. Please check the phone number.");

@@ -22,4 +22,9 @@ export function attachSocketEvents(socket: Socket, userId: string) {
   socket.on("send_message", (message: Message) => {
     MessageController.handleAddNewMessage(socket, message);
   });
+
+  //attaach mark-message-read Events
+  socket.on("mark-message-read", (data: { chatId: string; userId: string }) => {
+    MessageController.markMessageRead(socket, data.chatId, data.userId);
+  });
 }

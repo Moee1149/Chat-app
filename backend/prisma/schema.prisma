@@ -67,15 +67,16 @@ model ChatParticipant {
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   text      String
   senderId  String
-  fileUrl   String?  @default("")
+  fileUrl   String?   @default("")
   chatId    String
-  seen      Boolean  @default(false)
-  delivered Boolean  @default(false)
-  createdAt DateTime @default(now())
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  seen      Boolean   @default(false)
+  delivered Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  seenAt    DateTime? @default(now())
+  chat      Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
 
 model UserVerification {

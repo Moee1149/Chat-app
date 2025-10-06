@@ -27,6 +27,9 @@ export default function ChatSideBar({
   const [searchQuery, setSearchQuery] = useState("");
   const [, setSearchParams] = useSearchParams();
 
+  //filters out chats with no messages (newly create chats)
+  const chatsToShow = chats.filter((chat) => chat.lastMessage !== "");
+
   const closeDialog = () => {
     setIsDialogOpen(false);
   };
@@ -84,7 +87,7 @@ export default function ChatSideBar({
 
       {/* Chat List */}
       <UserChatLists
-        chats={chats}
+        chats={chatsToShow}
         selectedChat={selectedChat}
         onChatSelect={handleChatSelect}
         searchQuery={searchQuery}

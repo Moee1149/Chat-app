@@ -1,6 +1,10 @@
 import { type Socket } from "socket.io";
-import { ChatModel } from "../models/ChatModel";
 import { connections, userSessions } from "../socket";
+
+import { ChatModel } from "../models/ChatModel";
+import { ChatParticipantModel } from "../models/ChatParticipantModel";
+import { MessageModel } from "../models/MessageModel";
+import { DatabaseError } from "../error";
 
 type MessageType = {
   tempId?: string;
@@ -20,13 +24,18 @@ export class MessageController {
     try {
       const message = await ChatModel.saveMessage({ chatId, senderId, text });
       socket.emit("message-ack", { ...message, tempId, status: "sent" });
+      console.log(receiverId);
+      const participants = await ChatModel.getChatParticipants(chatId);
 
-      if (receiverId) {
-        const receiverSocketIds = userSessions.get(receiverId);
+      // Send message to all participants except the sender
+      const receivers = participants.filter((user) => user.id !== senderId);
+
+      receivers.forEach((receiver) => {
+        const receiverSocketIds = userSessions.get(receiver.id);
 
         if (receiverSocketIds && receiverSocketIds.size > 0) {
           console.log(
-            `Sending message to ${receiverId} on ${receiverSocketIds.size} sockets`,
+            `Sending message to ${receiver.id} on ${receiverSocketIds.size} sockets`,
           );
 
           // Loop through all the receiver's socket IDs
@@ -44,18 +53,51 @@ export class MessageController {
           });
         } else {
           console.log(
-            `User ${receiverId} is not connected, message will be delivered when they connect`,
+            `User ${receiver.id} is not connected, message will be delivered when they connect`,
           );
           // Optionally store undelivered messages for later delivery
         }
-      }
+      });
     } catch (err) {
       console.log(err);
-      if (err instanceof Error) {
+      if (err instanceof DatabaseError) {
         socket.emit("message-error", {
           tempId: tempId ?? "",
           message: err.message || "Failed to send message",
           status: "failed",
+        });
+      }
+    }
+  }
+
+  static async markMessageRead(socket: Socket, chatId: string, userId: string) {
+    try {
+      // Validate input
+      if (!chatId || !userId) {
+        socket.emit("mark-messages-read-error", {
+          message: "Missing required fields: chatId or userId",
+          status: "error",
+        });
+        return;
+      }
+
+      await MessageModel.markMessageRead(chatId, userId);
+      await ChatParticipantModel.resetUnreadCount(chatId, userId);
+      socket.emit("mark-messages-read-success", {
+        chatId,
+        userId,
+        status: "success",
+      });
+      console.log("marked messsage as read");
+    } catch (err) {
+      console.log(err);
+      if (err instanceof Error) {
+        // Emit error event back to client
+        socket.emit("mark-messages-read-error", {
+          message: "Failed to mark messages as read",
+          status: "error",
+          details:
+            process.env.NODE_ENV === "development" ? err.message : undefined,
         });
       }
     }
