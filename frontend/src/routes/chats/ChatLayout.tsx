@@ -59,14 +59,21 @@ export default function ChatApp() {
 
   const selectedChatData = chats.find((chat) => chat.id === selectedChat);
 
-  // Helper function to get chat by ID from current chats
+  // ✅ Enhanced getChatById to handle new chats
   const getChatById = useCallback(
     (chatId: string): Chat | undefined => {
+      // First try current chats array
+      const currentChat = chats.find((chat) => chat.id === chatId);
+      if (currentChat) {
+        return currentChat;
+      }
+
+      // Fallback to query cache
       const currentChats =
         queryClient.getQueryData<Chat[]>(["chats", userIdRef.current]) || [];
       return currentChats.find((chat) => chat.id === chatId);
     },
-    [queryClient],
+    [chats, queryClient],
   );
 
   // Helper function to show message toast
@@ -96,6 +103,26 @@ export default function ChatApp() {
       },
     );
   };
+
+  // ✅ NEW: Reset unread count when chat is selected
+  useEffect(() => {
+    if (!selectedChat || !userId || !socket) return;
+
+    console.log(`Chat ${selectedChat} selected, marking as read...`);
+
+    // Optimistically reset unread count
+    queryClient.setQueryData(["chats", userId], (oldChats: Chat[] = []) => {
+      return oldChats.map((chat) =>
+        chat.id === selectedChat ? { ...chat, unreadCount: 0 } : chat,
+      );
+    });
+
+    // Emit to server
+    socket.emit("mark-message-read", {
+      chatId: selectedChat,
+      userId: userId,
+    });
+  }, [selectedChat, userId, socket, queryClient]);
 
   useEffect(() => {
     function getChatId() {
@@ -155,10 +182,8 @@ export default function ChatApp() {
 
   useEffect(() => {
     if (!socket) return;
-    console.log("Use Effect runs:");
 
     const handleNewMessage = (message: Message) => {
-      console.log("New message received: ", message);
       const currentSelectedChat = selectedChatRef?.current;
       const currentUserId = userIdRef?.current;
       // ✅ Check userId here instead of in the condition above
@@ -167,11 +192,26 @@ export default function ChatApp() {
         return;
       }
 
-      const targetChat = getChatById(message.chatId);
-      console.log("Target chat found: ", targetChat);
-      console.log("message.chatid:", message.chatId);
-      console.log("currestselected: ", currentSelectedChat);
-      console.log("currentuserId:", currentUserId);
+      let targetChat = getChatById(message.chatId);
+
+      // ✅ If chat not found (new chat case), refetch and wait
+      if (!targetChat) {
+        console.log("Chat not found in cache, refetching...");
+        queryClient
+          .invalidateQueries({ queryKey: ["chats", currentUserId] })
+          .then(() => {
+            // After refetch, try to get chat again
+            const updatedChats =
+              queryClient.getQueryData<Chat[]>(["chats", currentUserId]) || [];
+            targetChat = updatedChats.find(
+              (chat) => chat.id === message.chatId,
+            );
+
+            if (targetChat?.otherUsers[0]) {
+              showMessageToast(message, targetChat);
+            }
+          });
+      }
 
       if (message.chatId === currentSelectedChat) {
         queryClient.setQueryData(
