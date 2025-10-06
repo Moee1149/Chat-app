@@ -314,6 +314,59 @@ export default function ChatApp() {
     };
   }, [socket, queryClient, getChatById]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    console.log("Setting up user status listeners...");
+
+    // ✅ Listen for user status updates
+    const handleUserStatusUpdate = (data: {
+      userId: string;
+      isOnline: boolean;
+      lastSeen: string;
+    }) => {
+      console.log("🔄 User status update received:", data);
+
+      // ✅ Update chats query data with new online status
+      queryClient.setQueryData(
+        ["chats", userIdRef.current],
+        (oldChats: Chat[] = []) => {
+          const updatedChats = oldChats.map((chat) => {
+            const updatedOtherUsers = chat.otherUsers.map((user) => {
+              if (user.id === data.userId) {
+                console.log(
+                  `📱 Updating user ${user.firstname} online status to: ${data.isOnline}`,
+                );
+                return {
+                  ...user,
+                  isOnline: data.isOnline,
+                  lastSeen: data.lastSeen,
+                };
+              }
+              return user;
+            });
+
+            return {
+              ...chat,
+              otherUsers: updatedOtherUsers,
+            };
+          });
+
+          console.log("✅ Updated chats with new status:", updatedChats);
+          return updatedChats;
+        },
+      );
+
+      // ✅ Force UI re-render by invalidating queries
+      queryClient.invalidateQueries({ queryKey: ["chats", userIdRef.current] });
+    };
+    socket.on("user-status-update", handleUserStatusUpdate);
+
+    return () => {
+      socket.off("user-status-update", handleUserStatusUpdate);
+    };
+  }, [socket, queryClient]);
+
   return (
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>
       <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">

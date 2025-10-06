@@ -31,7 +31,7 @@ export function initialzeSocketIO(httpServer: HTTPServer) {
       }
       userSessions.get(userId)!.add(socket.id);
       console.log(`User ${userId} connected (Socket ID: ${socket.id})`);
-      attachSocketEvents(socket, userId);
+      attachSocketEvents(socket, userId, io);
     });
   });
 

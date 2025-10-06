@@ -4,6 +4,37 @@ import { PrismaClientKnownRequestError } from "../generated/prisma/runtime/libra
 import { DatabaseError } from "../error";
 
 export class UserModel {
+  //update online status
+  static async updateOnlineStatus(userId: string, status: boolean) {
+    try {
+      return await prisma.user.update({
+        where: { id: userId },
+        data: { isOnline: status },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        console.log("Primsa Error: ", error.code);
+        throw new DatabaseError("Database error: " + error.code);
+      }
+      throw error;
+    }
+  }
+
+  static async updateLastSeen(userId: string) {
+    try {
+      return await prisma.user.update({
+        where: { id: userId },
+        data: { lastSeen: new Date() },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        console.log("Primsa Error: ", error.code);
+        throw new DatabaseError("Database error: " + error.code);
+      }
+      throw error;
+    }
+  }
+
   //check user exist method
   async checkUserExist(email: string) {
     try {

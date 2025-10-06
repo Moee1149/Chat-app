@@ -197,6 +197,50 @@ export class ChatModel {
     }
   }
 
+  static async getUserContactsWithDetails(userId: string) {
+    try {
+      const chats = await prisma.chat.findMany({
+        where: {
+          users: {
+            some: {
+              id: userId,
+            },
+          },
+        },
+        include: {
+          users: {
+            where: {
+              id: {
+                not: userId, // Exclude the original user
+              },
+            },
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+              isOnline: true,
+              lastSeen: true,
+              profilePictureUrl: true,
+            },
+          },
+        },
+      });
+
+      // Flatten and deduplicate contacts
+      const contactsMap = new Map();
+      chats.forEach((chat) => {
+        chat.users.forEach((user) => {
+          contactsMap.set(user.id, user);
+        });
+      });
+
+      return Array.from(contactsMap.values());
+    } catch (error) {
+      console.error("Error getting user contacts with details:", error);
+      return [];
+    }
+  }
+
   async findChatBetweenUsers(userAId: string, userBId: string) {
     try {
       // Find chats where both users are participants
