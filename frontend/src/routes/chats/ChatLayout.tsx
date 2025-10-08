@@ -367,6 +367,41 @@ export default function ChatApp() {
     };
   }, [socket, queryClient]);
 
+  useEffect(() => {
+    if (!socket) return;
+    console.log("Setting up browser visibility listeners...");
+
+    // Handle visibility change (tab switch, minimize)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is hidden/minimized
+        console.log("🔴 Tab hidden - setting user offline");
+        socket.emit("user-offline", userIdRef.current);
+      } else {
+        // Tab is visible again
+        console.log("🟢 Tab visible - setting user online");
+        socket.emit("user-online", userIdRef.current);
+      }
+    };
+
+    // Handle browser/tab closing
+    const handleBeforeUnload = () => {
+      console.log("🔴 Browser closing - setting user offline");
+      socket.emit("user-offline", userIdRef.current);
+    };
+
+    // Add event listeners
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup function
+    return () => {
+      console.log("🧹 Cleaning up browser visibility listeners...");
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [socket]);
+
   return (
     <div className={`h-screen flex ${isDarkMode ? "dark" : ""}`}>
       <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
