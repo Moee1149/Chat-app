@@ -1,13 +1,16 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 import type { Chat } from "@/types/chat-types";
 import { Info, MoreVertical, Phone, Video } from "lucide-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 type ChatHeaderProps = {
   selectedChatData: Chat | undefined;
 };
 
 export default function ChatHeader({ selectedChatData }: ChatHeaderProps) {
+  const router = useNavigate();
   return (
     <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
       <div className="flex items-center justify-between">
@@ -49,7 +52,12 @@ export default function ChatHeader({ selectedChatData }: ChatHeaderProps) {
             <Phone className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" className="cursor-pointer">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="cursor-pointer"
+            onClick={() => router("/chats/video-call")}
+          >
             <Video className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon">
