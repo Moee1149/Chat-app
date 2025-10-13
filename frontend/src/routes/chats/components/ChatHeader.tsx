@@ -48,7 +48,8 @@ export default function ChatHeader({ selectedChatData }: ChatHeaderProps) {
           <Button variant="ghost" size="icon">
             <Phone className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+
+          <Button variant="ghost" size="icon" className="cursor-pointer">
             <Video className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon">

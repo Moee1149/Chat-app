@@ -84,7 +84,7 @@ export default function ChatApp() {
     toast(
       <div className="flex items-center justify-center">
         <Avatar className="flex-shrink-0 h-10 w-10">
-          <AvatarImage src={otherUser.profilePictureUrl} />
+          <AvatarImage src={otherUser?.profilePictureUrl ? otherUser?.profilePictureUrl : ""} />
           <AvatarFallback>
             {otherUser.customName?.[0] ?? otherUser.firstname?.[0]}
           </AvatarFallback>

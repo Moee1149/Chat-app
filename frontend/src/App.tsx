@@ -1,4 +1,6 @@
 import { Routes, Route } from "react-router";
+import { SocketProvider } from "./context/SocketContext";
+
 import IndexPage from "./routes/index/IndexPage";
 import LoginPage from "./routes/auth/login/LoginPage";
 import AuthLayout from "./routes/auth/AuthLayout";
@@ -7,7 +9,7 @@ import { InputOTPControlled } from "./routes/auth/verification/InputOTPControlle
 import CreateNewAccount from "./routes/auth/signup/CreateNewAccount";
 import NotFoundPage from "./components/not-foundpage";
 import ChatLayout from "./routes/chats/ChatLayout";
-import { SocketProvider } from "./context/SocketContext";
+import VideoCall from "./routes/chats/components/VideoCall";
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
           </SocketProvider>
         }
       />
+      <Route path="/chats/video-call" element={<VideoCall />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
