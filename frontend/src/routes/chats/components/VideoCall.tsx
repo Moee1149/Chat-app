@@ -10,11 +10,11 @@ type callState = "calling" | "incoming" | "active" | "ended";
 const VideoCall = () => {
   const navigate = useNavigate();
   const { socket } = useSocket();
+  const [callState, setCallState] = useState<callState>("calling");
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const [callState, setCallState] = useState<callState>("incoming");
   const connection = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
@@ -64,6 +64,7 @@ const VideoCall = () => {
     return () => {
       dc.close();
       lc.close();
+      connection.current = null;
     };
   }, [socket]);
 
@@ -83,30 +84,93 @@ const VideoCall = () => {
         stream.getTracks().forEach((track) => {
           connection.current?.addTrack(track, stream);
         });
+
+        socket?.emit("incoming_call", { calling: true });
       } catch (error) {
         console.error("[v0] Error accessing media devices:", error);
       }
     };
 
-    if (callState == "calling") {
-      startLocalVideo();
-    }
+    startLocalVideo();
 
     return () => {
       // Cleanup: stop all tracks when component unmounts
       if (videoElement && videoElement.srcObject) {
         const stream = videoElement.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
+        videoElement.srcObject = null;
       }
     };
-  }, [callState]);
+  }, [socket]);
 
-  const acceptCall = () => {
+  useEffect(() => {
+    const lc = connection.current;
+    socket?.on("incoming-call", () => {
+      setCallState("incoming");
+    });
+
+    socket?.on("call-accepted", () => {
+      if (lc) {
+        lc.createOffer()
+          .then((o) => {
+            lc.setLocalDescription(o);
+            socket?.emit("offer", { offer: o });
+          })
+          .catch((err) =>
+            console.error("Error setting local descripiton: ", err)
+          );
+      }
+    });
+
+    socket?.on("offer", async (offer) => {
+      console.log("Received offer from other user: ", offer);
+      try {
+        await lc?.setRemoteDescription(offer);
+        const answer = await lc?.createAnswer();
+        await lc?.setLocalDescription(answer);
+        console.log("offer and answer set");
+        socket.emit("answer", { answer });
+      } catch (err) {
+        console.error("Error: ", err);
+      }
+    });
+
+    socket?.on("answer", async (answer) => {
+      try {
+        await lc?.setRemoteDescription(answer);
+        console.log("connection established (reciver side)");
+      } catch (err) {
+        console.error("Error setting remote despriction: ", err);
+      }
+    });
+
+    return () => {
+      socket?.off("incoming-call");
+      socket?.off("call-accepted");
+      socket?.off("offer");
+      socket?.off("answer");
+    };
+  }, [socket]);
+
+  const acceptCall = async () => {
+    const localVideoElement = localVideoRef.current;
+    const localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    if (localVideoElement) {
+      localVideoElement.srcObject = localStream;
+      localStream.getTracks().forEach((track) => {
+        connection.current?.addTrack(track, localStream);
+      });
+    }
     setCallState("active");
+    socket?.emit("call-accepted", { accepted: true });
   };
 
   const rejectCall = () => {
-    navigate("/chats");
+    navigate("/chats"); //return to where the user was before.
   };
 
   const toggleMute = () => {
@@ -160,7 +224,7 @@ const VideoCall = () => {
   // }
   if (callState === "calling") {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700">
+      <div className="flex h-screen items-center justify-center bg-black/50">
         <div className="absolute right-6 top-6 h-70 w-90 overflow-hidden rounded-lg border-2 border-white/20 shadow-2xl z-50">
           <video
             ref={localVideoRef}
@@ -184,7 +248,7 @@ const VideoCall = () => {
         <div className="text-center space-y-8">
           <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm animate-pulse">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white">
-              <span className="text-4xl font-bold text-indigo-600">JD</span>
+              <span className="text-4xl font-bold text-blue-600">JD</span>
             </div>
           </div>
 
@@ -210,7 +274,7 @@ const VideoCall = () => {
 
   if (callState === "incoming") {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-green-600 to-emerald-700">
+      <div className="flex h-screen items-center justify-center bg-black/50">
         <div className="text-center space-y-8">
           <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm animate-bounce">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white">
